@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="MeEAT" />
+<meta name="theme-color" content="#EBEEE7" />
+<title>MeEAT</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #EBEEE7; -webkit-font-smoothing: antialiased; }
+  body { overscroll-behavior-y: none; }
+  /* svh keeps the bottom nav above Safari's collapsing toolbar; falls back to vh */
+  .app-shell { height: 100vh; height: 100svh; }
+  input, textarea, button { font-family: inherit; }
+</style>
+<script>
+  /* surface any startup failure on screen instead of a blank white page */
+  window.__err = function (msg) {
+    window.__mounted = true;
+    var r = document.getElementById("root") || document.body;
+    r.innerHTML = '<pre style="white-space:pre-wrap;font:13px ui-monospace,Menlo,monospace;color:#C7453C;background:#EBEEE7;padding:16px;margin:0;min-height:100vh;">App failed to start:\n\n' +
+      String(msg).replace(/</g, "&lt;") + "</pre>";
+  };
+  window.addEventListener("error", function (e) {
+    window.__err((e && e.message ? e.message : "Script error") + (e && e.filename ? "\n" + e.filename + " : line " + e.lineno : ""));
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    window.__err("Promise rejection: " + (e && e.reason ? (e.reason.message || e.reason) : "unknown"));
+  });
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      var r = document.getElementById("root");
+      if (r && r.childElementCount === 0 && !window.__mounted) {
+        window.__err("Scripts finished but nothing rendered — React or Babel was likely blocked from loading (a network or content filter on cdn.jsdelivr.net), or a compile error occurred.");
+      }
+    }, 4500);
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin
+  onerror="window.__err('Could not load React — cdn.jsdelivr.net may be blocked on this network.')"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin
+  onerror="window.__err('Could not load ReactDOM — cdn.jsdelivr.net may be blocked on this network.')"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js" crossorigin
+  onerror="window.__err('Could not load Babel — cdn.jsdelivr.net may be blocked on this network.')"></script>
+<script>
+  /* generate the MeEAT turkey-leg app icons + web manifest at runtime (single file) */
+  (function () {
+    var SVG =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="512" height="512">' +
+        '<rect width="300" height="300" fill="#0E0E0E"/>' +
+        '<circle cx="150" cy="150" r="150" fill="#FFC21E"/>' +
+        '<rect x="150" y="0" width="150" height="150" fill="#0E0E0E"/>' +
+        '<path d="M82 108 Q100 124 118 108" fill="none" stroke="#141414" stroke-width="10" stroke-linecap="round"/>' +
+        '<g transform="translate(179 171) rotate(-120) scale(1.18)">' +
+          '<path d="M43 110 C40 116 39 121 42 124 C36 125 33 131 37 136 C41 141 48 140 50 135 C52 140 59 141 63 136 C67 131 64 125 58 124 C61 121 60 116 57 110 Z" fill="#EAE8E3" stroke="#141414" stroke-width="6.5" stroke-linejoin="round"/>' +
+          '<path d="M50 8 C74 8 90 26 90 50 C90 72 80 90 66 102 C60 107 56 110 54 113 L46 113 C44 110 40 107 34 102 C20 90 10 72 10 50 C10 26 26 8 50 8 Z" fill="#7C4324" stroke="#141414" stroke-width="8" stroke-linejoin="round"/>' +
+          '<path d="M46 16 C66 16 80 32 80 52 C80 70 71 84 60 94 C56 82 50 74 40 68 C28 60 22 44 26 32 C29 22 37 16 46 16 Z" fill="#A05C31" opacity="0.9"/>' +
+          '<ellipse cx="40" cy="34" rx="11" ry="7" fill="#ffffff" opacity="0.35" transform="rotate(-30 40 34)"/>' +
+        '</g>' +
+      '</svg>';
+    function rasterize(size, cb) {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var c = document.createElement("canvas"); c.width = size; c.height = size;
+          c.getContext("2d").drawImage(img, 0, 0, size, size);
+          cb(c.toDataURL("image/png"));
+        } catch (e) { cb(null); }
+      };
+      img.onerror = function () { cb(null); };
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(SVG);
+    }
+    try {
+      rasterize(180, function (apple) {
+        if (apple) { var la = document.createElement("link"); la.rel = "apple-touch-icon"; la.href = apple; document.head.appendChild(la); }
+        rasterize(192, function (i192) {
+          rasterize(512, function (i512) {
+            var icons = [];
+            if (i192) icons.push({ src: i192, sizes: "192x192", type: "image/png" });
+            if (i512) icons.push({ src: i512, sizes: "512x512", type: "image/png" });
+            var manifest = {
+              name: "MeEAT", short_name: "MeEAT", start_url: ".", scope: ".",
+              display: "standalone", background_color: "#EBEEE7", theme_color: "#EBEEE7", icons: icons,
+            };
+            var blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+            var lm = document.createElement("link"); lm.rel = "manifest"; lm.href = URL.createObjectURL(blob); document.head.appendChild(lm);
+          });
+        });
+      });
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+/* ================= inline icons (replacing lucide-react) ================= */
+function Icon({ size = 24, color = "currentColor", strokeWidth = 2, style, children }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+    strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>{children}</svg>;
+}
+const ShoppingCart = (p) => <Icon {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></Icon>;
+const Utensils = (p) => <Icon {...p}><path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></Icon>;
+const BarChart3 = (p) => <Icon {...p}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></Icon>;
+const Check = (p) => <Icon {...p}><polyline points="20 6 9 17 4 12"/></Icon>;
+const ChevronDown = (p) => <Icon {...p}><path d="m6 9 6 6 6-6"/></Icon>;
+const Plus = (p) => <Icon {...p}><path d="M5 12h14"/><path d="M12 5v14"/></Icon>;
+const X = (p) => <Icon {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Icon>;
+const Sparkles = (p) => <Icon {...p}><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></Icon>;
+const ThumbsUp = (p) => <Icon {...p}><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></Icon>;
+const ThumbsDown = (p) => <Icon {...p}><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></Icon>;
+const RefreshCw = (p) => <Icon {...p}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></Icon>;
+const Download = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></Icon>;
+const Upload = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></Icon>;
+
+/* ================= theme ================= */
+const T = {
+  bg: "#EBEEE7", ink: "#17181A", muted: "#6E7168", faint: "#B7BAB0",
+  green: "#2E7D4A", greenBg: "#E4F0E7", red: "#C7453C", redBg: "#F8E9E7", amber: "#C08A2D",
+};
+const UI = `-apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
+
+/* ================= embedded rules (distilled from the Project's skill files) ================= */
+const RULES = `You are the meal-plan engine for one specific user. Follow these rules exactly.
+
+PROFILE: 6'6" male, ~265lb starting a fat-loss cut (use check-in weight if given). Lifts 4x/week (evenings assumed), desk job, ~11k steps/day. Goal: fat loss, muscle preservation. He controls diet via shopping/cooking decisions, not meal logging — the plan must be realistic to follow.
+
+DEFAULT TARGETS (unless check-in adjusts them): 2950 kcal, 270g protein, 288g carbs, 80g fat daily.
+
+PRIORITY ORDER: 1) protein, 2) total calories, 3) carb/fat split.
+TOLERANCE BANDS (check every day): protein hard floor 90% of target every day (overshoot fine); calories ±10% daily, weekly avg ±5%; carbs/fat ±15% with fat ≥ ~0.3g/lb bodyweight (~80g hormone floor). Note intentional band misses.
+PROTEIN DISTRIBUTION: 4–5 feedings of ~40–65g; lunch and dinner each ≥40g. Morning shake = one feeding (IF pattern: light morning, real food afternoon/evening).
+CARB TIMING: largest carbs around evening training on lifting days.
+
+SODIUM (blood-pressure history — real constraint): ≤2300mg/day guideline, HARD FLAG >3000mg with a named concrete fix (e.g. "skip soy sauce that night: −500mg"). No added salt in home cooking; season with garlic/onion powder, pepper, smoked paprika, citrus, herbs, vinegar. Rinse canned beans, low-sodium sauces. Estimate sodium ("na") per meal.
+
+SCHEDULE: Mon–Thu lunch out (restaurant). Fri WFH. Sat/Sun home. Breakfast = whey shake only (water or milk + whey, NOTHING else). Workday snacks: shake (water) or protein bar only (no yogurt/string cheese at work; fine at home Fri–Sun).
+
+COOKING — HARD CAP: max 2 home-cooked batch recipes per week, total. Every other home meal is batch leftovers or zero-cook assembly (shake, bar, tuna packets, rice pouch, cottage cheese, thawed frozen berries, string cheese at home). NEVER a third cooked dish. EFFORT (HIGH PRIORITY): every batch recipe must be quick and simple — ≤30 minutes active prep and only 1–2 pans/pots total. Favor one-pan / one-pot / sheet-pan / Instant Pot methods; avoid recipes with multiple simultaneous components, heavy chopping, or fussy technique. If a concept can't be done in ≤30 min with ≤2 pans, simplify it or pick a different dish. Stovetop/Instant Pot/microwave preferred; oven fits only 2 sheet pans. Cook sessions: Sunday batch (covers dinners through Wednesday MAX — food safety 3–4 days) + Wed/Thu evening batch (covers Thu–Sun incl. weekend meals), or freeze Sunday portions with thaw notes. Cooked rice: use 90-second pouches instead (he won't cook stovetop rice).
+
+HARD DISLIKES (never violate): no peanut butter anywhere; shakes = water/milk + whey ONLY; no stovetop rice (use TJ's 90-sec pouches); no fresh bananas (use TJ's chocolate-covered frozen banana/strawberry); no almonds as default snack; prefer bars with better protein:sugar than Quest (e.g. Barebells).
+
+LIKES (inspiration, not checklist): myprotein whey; TJ's rice pouches, Thai wheat noodles; sriracha/hot sauce, Buffalo chicken, TJ's yellow curry sauce, TJ's masala simmer sauce; Asian stir-fries; frozen berries; BBQ sauce occasionally (low-sugar/sodium brand). Shops at Trader Joe's — default to TJ's products.
+
+VARIETY: within a week repeats are the DEFAULT (same batch meal 4 nights is good). Across weeks vary protein/cuisine vs. the previous week.
+
+YIELD FACTORS (shopping = raw): raw_to_buy = cooked_needed / yield. Chicken breast 0.75; ground turkey/beef 93% 0.75; fish 0.80; shrimp 0.80. Round UP to real package sizes (TJ's meat trays ≈1–1.5lb). Shopping list must be traceable to the recipes and grouped in store-walk order: Meat & Seafood, Dairy & Refrigerated, Frozen, Grains, Pantry & Sauces, Supplements & Snacks.
+
+RESTAURANT LUNCHES (cached verified data, treat as ±10–15%):
+- Chipotle modified bowl: brown rice 4oz, black beans 4oz, DOUBLE chicken 8oz, fajita veg, fresh tomato salsa, romaine; SKIP cheese & corn salsa → 880 kcal | 85P | 89C | 23F | ~1450mg na.
+- Roti modified bowl: saffron rice, double chicken, curried carrots, chickpea salad, cucumbers, tomatoes, feta, pickled onions, Med yogurt, hummus; SKIP pita & hot honey harissa → 1045 kcal | 79P | 73C | 46.5F | ~1600mg na. Richest option — max once/week, not back-to-back.
+- CAVA-style bowl: grain 4oz, double chicken 8oz, hummus, tzatziki, tomato-cucumber salad, feta, light vinaigrette → 850 kcal | 77P | 53C | 40F | ~1300mg na. Higher fat — trim added oil at dinner that day.
+Rotate 2–3 of these Mon–Thu. Pattern for any new spot: double the protein, cut cheese/heavy sauces/fried/bread, keep veg.
+
+ADJUSTMENT PROTOCOL (apply from the check-in): expect ~1–1.5 lb/week loss judged on weekly average. Stall 2+ weeks → cut 100–150 kcal from carbs and say so. Strength dropping → hold calories a week, shift carbs toward training. Losing >2 lb/week repeatedly → add 100–150 kcal (carbs). Every 10–15 lb lost → flag TDEE reassessment. State any target change explicitly in "notes".
+
+TASTE FEEDBACK: you will receive the user's accumulated thumbs-up/down history on meals. Treat thumbs-down as near-hard dislikes (avoid or clearly transform the dish). Treat thumbs-up as strong candidates for rotation, but still respect week-over-week variety.`;
+
+/* ================= seed plan (week of Jul 5 2026) ================= */
+const SEED = {
+  weekStart: "2026-07-05", weekLabel: "Week of Jul 5, 2026",
+  targets: { kcal: 2950, protein: 270, carbs: 288, fat: 80 },
+  days: [
+    { day: "Sun", meals: [
+      { slot: "Breakfast", name: "Whey shake", note: "3 scoops + 1½ cups whole milk", kcal: 533, protein: 75, carbs: 24, fat: 18, na: 308 },
+      { slot: "Lunch", name: "Tuna, rice & veggie bowl", note: "Zero-cook • tuna + rice pouches + veg + olive oil", kcal: 1080, protein: 56, carbs: 150, fat: 28, na: 780 },
+      { slot: "Snack", name: "Protein bar", kcal: 200, protein: 20, carbs: 20, fat: 7, na: 190 },
+      { slot: "Dinner", name: "Ginger-Soy Chicken Stir-Fry", note: "Recipe A • fresh cook", kcal: 1212, protein: 106, carbs: 128, fat: 27, na: 779, tags: ["cook"] },
+      { slot: "Evening", name: "Cottage cheese + berries", note: "½ cup + 1 cup frozen berries", kcal: 160, protein: 13, carbs: 21, fat: 2, na: 350 } ] },
+    { day: "Mon", meals: [
+      { slot: "Breakfast", name: "Whey shake", note: "with whole milk", kcal: 533, protein: 75, carbs: 24, fat: 18, na: 308 },
+      { slot: "Lunch", name: "Chipotle bowl", note: "Modified • out", kcal: 880, protein: 85, carbs: 89, fat: 23, na: 1450, tags: ["out"] },
+      { slot: "Snack", name: "Whey shake", note: "with water, at work", kcal: 309, protein: 63, carbs: 6, fat: 6, na: 150 },
+      { slot: "Dinner", name: "Ginger-Soy Chicken Stir-Fry", note: "Recipe A • leftover", kcal: 1212, protein: 106, carbs: 128, fat: 27, na: 779 },
+      { slot: "Evening", name: "Chocolate-covered frozen fruit", kcal: 150, protein: 1, carbs: 20, fat: 7, na: 10 } ] },
+    { day: "Tue", meals: [
+      { slot: "Breakfast", name: "Whey shake", note: "with whole milk", kcal: 533, protein: 75, carbs: 24, fat: 18, na: 308 },
+      { slot: "Lunch", name: "Roti bowl", note: "Modified • out", kcal: 1045, protein: 79, carbs: 73, fat: 47, na: 1600, tags: ["out"] },
+      { slot: "Snack", name: "Protein bar", kcal: 200, protein: 20, carbs: 20, fat: 7, na: 190 },
+      { slot: "Dinner", name: "Ginger-Soy Chicken Stir-Fry", note: "Recipe A • leftover • skip soy sauce (sodium)", kcal: 1212, protein: 106, carbs: 128, fat: 27, na: 779 },
+      { slot: "Evening", name: "Cottage cheese", note: "½ cup", kcal: 90, protein: 12, carbs: 4, fat: 2, na: 350 } ] },
+    { day: "Wed", meals: [
+      { slot: "Breakfast", name: "Whey shake", note: "with whole milk", kcal: 533, protein: 75, carbs: 24, fat: 18, na: 308 },
+      { slot: "Lunch", name: "Cava-style bowl", note: "out", kcal: 850, protein: 77, carbs: 53, fat: 40, na: 1300, tags: ["out"] },
+      { slot: "Snack", name: "Whey shake", note: "with water, at work", kcal: 309, protein: 63, carbs: 6, fat: 6, na: 150 },
+      { slot: "Dinner", name: "Ginger-Soy Chicken Stir-Fry", note: "Recipe A • last • cook Recipe B tonight", kcal: 1212, protein: 106, carbs: 128, fat: 27, na: 779, tags: ["cook"] },
+      { slot: "Evening", name: "Berries + string cheese", note: "1 cup + 1 stick", kcal: 150, protein: 8, carbs: 18, fat: 6, na: 160 } ] },
+    { day: "Thu", meals: [
+      { slot: "Breakfast", name: "Whey shake", note: "with whole milk", kcal: 533, protein: 75, carbs: 24, fat: 18, na: 308 },
+      { slot: "Lunch", name: "Chipotle bowl", note: "Modified • out • repeat", kcal: 880, protein: 85, carbs: 89, fat: 23, na: 1450, tags: ["out"] },
+      { slot: "Snack", name: "Protein bar", kcal: 200, protein: 20, carbs: 20, fat: 7, na: 190 },
+      { slot: "Dinner", name: "Masala Turkey Bowl", note: "Recipe B • fresh", kcal: 961, protein: 78, carbs: 88, fat: 29, na: 1015 },
+      { slot: "Evening", name: "Chocolate-covered frozen fruit", kcal: 150, protein: 1, carbs: 20, fat: 7, na: 10 } ] },
+    { day: "Fri", meals: [
+      { slot: "Breakfast", name: "Whey shake", note: "with whole milk", kcal: 533, protein: 75, carbs: 24, fat: 18, na: 308 },
+      { slot: "Lunch", name: "Masala Turkey Bowl", note: "Recipe B • leftover", kcal: 961, protein: 78, carbs: 88, fat: 29, na: 1015 },
+      { slot: "Snack", name: "Cottage cheese", note: "½ cup", kcal: 90, protein: 12, carbs: 4, fat: 2, na: 350 },
+      { slot: "Dinner", name: "Masala Turkey Bowl", note: "Recipe B • leftover", kcal: 961, protein: 78, carbs: 88, fat: 29, na: 1015 },
+      { slot: "Evening", name: "Chocolate-covered frozen fruit", kcal: 150, protein: 1, carbs: 20, fat: 7, na: 10 } ] },
+    { day: "Sat", meals: [
+      { slot: "Breakfast", name: "Whey shake", note: "with whole milk", kcal: 533, protein: 75, carbs: 24, fat: 18, na: 308 },
+      { slot: "Lunch", name: "Masala Turkey Bowl", note: "Recipe B • leftover", kcal: 961, protein: 78, carbs: 88, fat: 29, na: 1015 },
+      { slot: "Snack", name: "Berries + string cheese", note: "1 cup + 1 stick", kcal: 150, protein: 8, carbs: 18, fat: 6, na: 160 },
+      { slot: "Dinner", name: "Masala Turkey Bowl", note: "Recipe B • last", kcal: 961, protein: 78, carbs: 88, fat: 29, na: 1015 },
+      { slot: "Evening", name: "String cheese ×2", kcal: 160, protein: 14, carbs: 2, fat: 12, na: 320 } ] },
+  ],
+  grocery: [
+    { section: "Meat & Seafood", items: [ { name: "Chicken breast, raw", qty: "3.5–4 lb" }, { name: "Ground turkey, 93% lean", qty: "4.25–4.5 lb" } ] },
+    { section: "Dairy & Refrigerated", items: [ { name: "Whole milk", qty: "½ gallon" }, { name: "Cottage cheese, low-sodium", qty: "1 tub" }, { name: "String cheese", qty: "1 pack (need 4)" } ] },
+    { section: "Frozen", items: [ { name: "Stir-fry veggie mix", qty: "8 cups (~2 bags)" }, { name: "Mixed veggies, plain", qty: "11 cups (~2–3 bags)" }, { name: "Berries", qty: "1 bag (3 cups)" }, { name: "Chocolate-covered frozen fruit", qty: "1 bag" } ] },
+    { section: "Grains", items: [ { name: "Jasmine rice pouches, 90-sec", qty: "8" }, { name: "Thai wheat noodles (TJ's)", qty: "8 servings" } ] },
+    { section: "Pantry & Sauces", items: [ { name: "Tuna packets", qty: "3" }, { name: "Tikka Masala simmer sauce", qty: "1 jar" }, { name: "Low-sodium soy sauce", qty: "check pantry" }, { name: "Sesame oil", qty: "check pantry" }, { name: "Rice vinegar", qty: "check pantry" }, { name: "Olive oil", qty: "check pantry" }, { name: "Sriracha", qty: "check pantry" }, { name: "Garlic + ground ginger", qty: "check pantry" } ] },
+    { section: "Supplements & Snacks", items: [ { name: "Whey protein (Myprotein)", qty: "27 scoops — restock if low" }, { name: "Protein bars (Barebells or similar)", qty: "3" } ] },
+  ],
+};
+
+/* ================= plan normalize / validate ================= */
+function num(v, f) { if (v == null || isNaN(+v)) throw new Error(`Missing or invalid "${f}".`); return +v; }
+function normalizePlan(raw) {
+  if (!raw || typeof raw !== "object") throw new Error("Not a plan object.");
+  const weekStart = raw.weekStart || raw.weekKey;
+  if (!weekStart || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) throw new Error('Need "weekStart" as YYYY-MM-DD.');
+  const t = raw.targets || {};
+  const target = { kcal: num(t.kcal ?? t.calories, "targets.kcal"), p: num(t.protein ?? t.p, "targets.protein"),
+    c: num(t.carbs ?? t.c, "targets.carbs"), f: num(t.fat ?? t.f, "targets.fat") };
+  if (!Array.isArray(raw.days) || raw.days.length < 1) throw new Error('"days" must be a non-empty array.');
+  const base = new Date(weekStart + "T00:00:00");
+  const NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const days = raw.days.map((d, i) => {
+    const dt = new Date(base.getTime() + i * 86400000);
+    if (!Array.isArray(d.meals) || !d.meals.length) throw new Error(`Day ${i + 1} has no meals.`);
+    return {
+      day: d.day || NAMES[dt.getDay()],
+      date: d.date || dt.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      meals: d.meals.map((m, j) => ({
+        id: `${i}-${j}`, slot: m.slot || "Meal", name: m.name || "—", note: m.note || "",
+        kcal: +m.kcal || 0, p: +(m.protein ?? m.p) || 0, c: +(m.carbs ?? m.c) || 0, f: +(m.fat ?? m.f) || 0, na: +(m.na ?? m.sodium) || 0,
+        out: (m.tags || []).includes("out") || !!m.out, cook: (m.tags || []).includes("cook") || !!m.cook,
+      })),
+    };
+  });
+  const grocery = (raw.grocery || []).map((g, gi) => ({
+    section: g.section || "Other",
+    items: (g.items || []).map((it, ii) => ({ id: `${gi}-${ii}`, name: it.name || "—", qty: it.qty || "" })) }));
+  return { weekKey: weekStart, weekLabel: raw.weekLabel || "Week of " + base.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    target, days, grocery, notes: raw.notes || "" };
+}
+
+/* ================= storage (localStorage-backed; persists on this device) ================= */
+const store = {
+  async get(k) { try { const v = localStorage.getItem(k); return v == null ? null : JSON.parse(v); } catch (e) { return null; } },
+  async set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+const IDX = "weeks-index", ACTIVE = "active-week", TASTE = "taste-feedback", KEY_STORE = "anthropic-key";
+const normName = (s) => (s || "").toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+
+function todayIndex(weekKey, len) {
+  const start = new Date(weekKey + "T00:00:00");
+  return Math.max(0, Math.min((len || 7) - 1, Math.floor((Date.now() - start) / 86400000)));
+}
+function nextSunday() {
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  const add = (7 - d.getDay()) % 7 || 7;
+  d.setDate(d.getDate() + add);
+  return d.toISOString().slice(0, 10);
+}
+
+/* ================= Claude API (bring-your-own-key, direct browser access) ================= */
+async function askClaude(system, user, maxTokens) {
+  const apiKey = (await store.get(KEY_STORE)) || "";
+  if (!apiKey) throw new Error("No API key connected. Open the AI generator panel on the Plan tab and paste your Anthropic key — or generate the plan in a Claude chat and load the JSON via Weeks → Import.");
+
+  function drainLine(line, state) {
+    var s = line.trim();
+    if (s.indexOf("data:") !== 0) return;
+    var payload = s.slice(5).trim();
+    if (!payload || payload === "[DONE]") return;
+    try {
+      var ev = JSON.parse(payload);
+      if (ev && ev.type === "content_block_delta" && ev.delta && typeof ev.delta.text === "string") state.out += ev.delta.text;
+      else if (ev && ev.type === "error") state.err = (ev.error && ev.error.message) || "stream error";
+      else if (ev && ev.delta && typeof ev.delta.text === "string") state.out += ev.delta.text; // permissive fallback
+    } catch (_) {}
+  }
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(function () { controller.abort(); }, 75000);
+    let resp;
+    try {
+      resp = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-5",
+          max_tokens: maxTokens || 4000,
+          stream: true,
+          messages: [{ role: "user", content: system + "\n\n=== TASK ===\n" + user }],
+        }),
+      });
+    } catch (e) {
+      clearTimeout(timer);
+      if (attempt < 2) continue;
+      throw new Error("Couldn't reach the Anthropic API from the browser. The request may be timing out — try again, or generate in a Claude chat and load the JSON via Weeks → Import.");
+    }
+
+    if (!resp.ok) {
+      clearTimeout(timer);
+      let m = "";
+      try { m = (JSON.parse(await resp.text()).error || {}).message || ""; } catch (_) {}
+      throw new Error("Generator error (HTTP " + resp.status + ")" + (m ? ": " + m : "") + ". Check your key/billing, then try again.");
+    }
+
+    var state = { out: "", err: "" };
+    try {
+      if (resp.body && resp.body.getReader) {
+        // proper incremental SSE read — keeps the connection alive on long generations
+        var reader = resp.body.getReader();
+        var dec = new TextDecoder();
+        var buf = "";
+        while (true) {
+          var chunk = await reader.read();
+          if (chunk.done) break;
+          buf += dec.decode(chunk.value, { stream: true });
+          var nl;
+          while ((nl = buf.indexOf("\n")) >= 0) {
+            drainLine(buf.slice(0, nl), state);
+            buf = buf.slice(nl + 1);
+          }
+        }
+        if (buf) drainLine(buf, state);
+      } else {
+        // fallback: no streaming body available, read whole text and parse
+        var whole = await resp.text();
+        whole.split("\n").forEach(function (l) { drainLine(l, state); });
+        if (!state.out) { var p = parseClaudeBody(whole); if (p) state.out = p; }
+      }
+    } catch (e) {
+      clearTimeout(timer);
+      if (attempt < 2 && !state.out) continue;
+    }
+    clearTimeout(timer);
+
+    if (state.err && !state.out) throw new Error("The model returned an error: " + state.err + ". Try again in a moment.");
+    if (state.out && state.out.trim()) return state.out.trim();
+    // empty — loop and retry
+  }
+  throw new Error("The generator kept coming back empty. Try again, or generate the week in a Claude chat and load the JSON via Weeks → Import.");
+}
+
+function parseClaudeBody(bodyText) {
+  const t = (bodyText || "").trim();
+  if (!t) return "";
+  if (t[0] === "{" || t[0] === "[") {
+    try {
+      const data = JSON.parse(t);
+      if (data && data.error && data.error.message) throw new Error(data.error.message);
+      if (Array.isArray(data.content)) return data.content.map((b) => (typeof b === "string" ? b : (b && b.text) || "")).join("").trim();
+      if (typeof data.content === "string") return data.content.trim();
+      if (typeof data.completion === "string") return data.completion.trim();
+      if (Array.isArray(data)) {
+        let out = "";
+        data.forEach((ev) => { if (ev && ev.delta && typeof ev.delta.text === "string") out += ev.delta.text;
+          else if (ev && Array.isArray(ev.content)) out += ev.content.map((b) => (b && b.text) || "").join(""); });
+        if (out.trim()) return out.trim();
+      }
+    } catch (e) {
+      if (e.message && e.message.indexOf("JSON") === -1 && e.message.indexOf("Unexpected") === -1) throw e;
+    }
+  }
+  if (t.indexOf("data:") !== -1) {
+    let out = "";
+    for (const line of t.split("\n")) {
+      const s = line.trim();
+      if (s.indexOf("data:") !== 0) continue;
+      const payload = s.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      try {
+        const ev = JSON.parse(payload);
+        if (ev && ev.delta && typeof ev.delta.text === "string") out += ev.delta.text;
+        else if (ev && Array.isArray(ev.content)) out += ev.content.map((b) => (b && b.text) || "").join("");
+      } catch (_) {}
+    }
+    if (out.trim()) return out.trim();
+  }
+  throw new Error("Unreadable response — the generator returned: " + t.slice(0, 160).replace(/\s+/g, " "));
+}
+function extractJSON(text) {
+  const clean = text.replace(/```json|```/g, "").trim();
+  const first = clean.indexOf("{"), last = clean.lastIndexOf("}");
+  if (first === -1 || last === -1) throw new Error("The model didn't return JSON.");
+  const body = clean.slice(first, last + 1);
+  try {
+    return JSON.parse(body);
+  } catch (e1) {
+    // common model quirks: trailing commas before } or ], and stray commas
+    const repaired = body
+      .replace(/,(\s*[}\]])/g, "$1")   // remove trailing commas:  [ .., ]  { .., }
+      .replace(/}(\s*){/g, "},$1{");   // insert missing commas between adjacent objects
+    return JSON.parse(repaired);
+  }
+}
+function tasteSummary(taste) {
+  const likes = [], dislikes = [];
+  Object.values(taste || {}).forEach((t) => (t.v > 0 ? likes : dislikes).push(t.name));
+  return `THUMBS-UP MEALS (favor in rotation): ${likes.length ? likes.join("; ") : "none yet"}.\nTHUMBS-DOWN MEALS (avoid or clearly transform): ${dislikes.length ? dislikes.join("; ") : "none yet"}.`;
+}
+
+/* ================= shared bits ================= */
+function Bar({ value, target, color }) {
+  const pct = Math.min(100, target ? (value / target) * 100 : 0);
+  return <div style={{ height: 6, background: "#E7E4DA", borderRadius: 3, overflow: "hidden" }}>
+    <div style={{ width: `${pct}%`, height: "100%", background: color, transition: "width .35s ease" }} /></div>;
+}
+function Ring({ pct, size = 76, stroke = 8 }) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E7E4DA" strokeWidth={stroke} />
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={T.green} strokeWidth={stroke} strokeLinecap="round"
+      strokeDasharray={c} strokeDashoffset={c - (pct/100)*c} style={{ transition: "stroke-dashoffset .5s ease" }} /></svg>;
+}
+function Tag({ text }) {
+  return <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em",
+    color: T.muted, background: "#fff", border: "1px solid #E0DDD3", borderRadius: 5, padding: "1px 5px" }}>{text}</span>;
+}
+function Header({ title, sub, onWeek }) {
+  return <div style={{ margin: "10px 0 14px" }}>
+    <h1 style={{ margin: 0, fontSize: 27, fontWeight: 900, letterSpacing: "-.03em", color: T.ink }}>{title}</h1>
+    {onWeek ? <button onClick={onWeek} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none",
+      border: "none", padding: 0, cursor: "pointer", fontSize: 12.5, fontWeight: 700, color: T.muted, fontFamily: UI }}>
+      {sub} <ChevronDown size={14} /></button>
+      : <div style={{ fontSize: 12.5, fontWeight: 600, color: T.muted }}>{sub}</div>}
+  </div>;
+}
+function ThumbPair({ state, onUp, onDown, size = 16 }) {
+  return <span style={{ display: "inline-flex", gap: 6 }}>
+    <button onClick={(e) => { e.stopPropagation(); onUp(); }} style={{ background: state === 1 ? T.green : "#fff",
+      border: `1.5px solid ${state === 1 ? T.green : "#D5D2C7"}`, borderRadius: 8, padding: "5px 8px", cursor: "pointer",
+      display: "flex", alignItems: "center" }}>
+      <ThumbsUp size={size} color={state === 1 ? "#fff" : T.muted} /></button>
+    <button onClick={(e) => { e.stopPropagation(); onDown(); }} style={{ background: state === -1 ? T.red : "#fff",
+      border: `1.5px solid ${state === -1 ? T.red : "#D5D2C7"}`, borderRadius: 8, padding: "5px 8px", cursor: "pointer",
+      display: "flex", alignItems: "center" }}>
+      <ThumbsDown size={size} color={state === -1 ? "#fff" : T.muted} /></button>
+  </span>;
+}
+
+/* ================= Shop ================= */
+function Shop({ plan, checked, toggle, onWeek }) {
+  const total = plan.grocery.reduce((n, g) => n + g.items.length, 0);
+  const done = plan.grocery.reduce((n, g) => n + g.items.filter((it) => checked[it.id]).length, 0);
+  return <div style={{ padding: "8px 16px 16px" }}>
+    <Header title="Grocery list" sub={plan.weekLabel} onWeek={onWeek} />
+    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "4px 0 18px" }}>
+      <div style={{ flex: 1 }}><Bar value={done} target={total} color={T.green} /></div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: T.muted, fontVariantNumeric: "tabular-nums" }}>{done}/{total}</div>
+    </div>
+    {plan.grocery.map((g) => <div key={g.section} style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: T.ink,
+        borderBottom: `2px solid ${T.ink}`, paddingBottom: 5, marginBottom: 4 }}>{g.section}</div>
+      {g.items.map((it) => {
+        const on = !!checked[it.id];
+        return <button key={it.id} onClick={() => toggle(it.id)} style={{ width: "100%", display: "flex", alignItems: "center",
+          gap: 12, padding: "13px 2px", background: "none", border: "none", borderBottom: "1px solid #ECEAE1", cursor: "pointer", textAlign: "left" }}>
+          <span style={{ width: 24, height: 24, flexShrink: 0, borderRadius: 6, border: `2px solid ${on ? T.green : T.faint}`,
+            background: on ? T.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {on && <Check size={15} color="#fff" strokeWidth={3} />}</span>
+          <span style={{ flex: 1, fontSize: 15.5, fontWeight: 600, color: on ? T.faint : T.ink, textDecoration: on ? "line-through" : "none" }}>{it.name}</span>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted, flexShrink: 0 }}>{it.qty}</span>
+        </button>; })}
+    </div>)}
+  </div>;
+}
+
+/* ================= Eat ================= */
+function MacroRow({ label, value, target, color }) {
+  const over = value > target;
+  return <div style={{ marginBottom: 11 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: T.ink }}>{label}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted, fontVariantNumeric: "tabular-nums" }}>
+        <b style={{ color: over ? T.amber : T.ink, fontWeight: 800 }}>{Math.round(value)}</b> / {target}g</span>
+    </div><Bar value={value} target={target} color={color} /></div>;
+}
+function Eat({ plan, sel, setSel, eaten, toggle, taste, thumb, onWeek }) {
+  const d = plan.days[sel], tg = plan.target;
+  const sum = d.meals.reduce((a, m) => { if (eaten[m.id]) { a.kcal += m.kcal; a.p += m.p; a.c += m.c; a.f += m.f; a.na += m.na; } return a; },
+    { kcal: 0, p: 0, c: 0, f: 0, na: 0 });
+  const ate = d.meals.filter((m) => eaten[m.id]).length;
+  const ti = todayIndex(plan.weekKey, plan.days.length);
+  return <div style={{ padding: "8px 16px 16px" }}>
+    <Header title="Meals" sub={plan.weekLabel} onWeek={onWeek} />
+    <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+      {plan.days.map((dd, i) => {
+        const on = i === sel;
+        return <button key={i} onClick={() => setSel(i)} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none",
+          cursor: "pointer", background: on ? T.ink : "#fff", color: on ? "#fff" : T.muted, fontWeight: 700, fontSize: 13,
+          position: "relative", boxShadow: on ? "none" : "inset 0 0 0 1px #E3E0D6" }}>{dd.day[0]}
+          {i === ti && <span style={{ position: "absolute", top: 5, right: 7, width: 5, height: 5, borderRadius: "50%", background: on ? "#fff" : T.green }} />}
+        </button>; })}
+    </div>
+    <div style={{ background: "#fff", borderRadius: 14, padding: "16px 16px 14px", border: `2px solid ${T.ink}`, marginBottom: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderBottom: `6px solid ${T.ink}`, paddingBottom: 6, marginBottom: 10 }}>
+        <span style={{ fontSize: 17, fontWeight: 900 }}>{d.day} · {d.date}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: T.muted }}>{ate}/{d.meals.length} logged</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: `2px solid ${T.ink}`, paddingBottom: 10, marginBottom: 12 }}>
+        <span style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em" }}>Calories</span>
+        <span style={{ fontVariantNumeric: "tabular-nums" }}>
+          <b style={{ fontSize: 30, fontWeight: 900, color: sum.kcal > tg.kcal ? T.amber : T.ink }}>{sum.kcal}</b>
+          <span style={{ fontSize: 14, fontWeight: 700, color: T.muted }}> / {tg.kcal}</span></span>
+      </div>
+      <MacroRow label="Protein" value={sum.p} target={tg.p} color={T.green} />
+      <MacroRow label="Carbs" value={sum.c} target={tg.c} color={T.amber} />
+      <MacroRow label="Fat" value={sum.f} target={tg.f} color={T.ink} />
+      {sum.na > 0 && <div style={{ fontSize: 11.5, fontWeight: 700, marginTop: 2,
+        color: sum.na > 3000 ? T.red : sum.na > 2300 ? T.amber : T.muted }}>
+        Sodium: {sum.na}mg {sum.na > 3000 ? "· over 3,000 hard flag" : sum.na > 2300 ? "· above 2,300 guideline" : ""}</div>}
+    </div>
+    {d.meals.map((m) => {
+      const on = !!eaten[m.id];
+      const tv = taste[normName(m.name)]?.v ?? 0;
+      return <div key={m.id} onClick={() => toggle(m.id)} style={{ cursor: "pointer", marginBottom: 10, padding: "13px 15px",
+        borderRadius: 13, background: on ? T.greenBg : T.redBg, border: `1.5px solid ${on ? T.green : T.red}`, transition: "all .2s ease" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
+              <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", color: on ? T.green : T.red }}>{m.slot}</span>
+              {m.out && <Tag text="out" />}{m.cook && <Tag text="cook" />}
+            </div>
+            <div style={{ fontSize: 15.5, fontWeight: 700, color: T.ink }}>{m.name}</div>
+            {m.note && <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{m.note}</div>}
+            <div style={{ fontSize: 11.5, color: T.muted, marginTop: 5, fontVariantNumeric: "tabular-nums" }}>{m.kcal} kcal · {m.p}p · {m.c}c · {m.f}f</div>
+            <div style={{ marginTop: 8 }}>
+              <ThumbPair state={tv} size={14} onUp={() => thumb(m.name, 1)} onDown={() => thumb(m.name, -1)} />
+            </div>
+          </div>
+          <span style={{ width: 30, height: 30, flexShrink: 0, borderRadius: "50%", border: `2px solid ${on ? T.green : T.red}`,
+            background: on ? T.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {on && <Check size={17} color="#fff" strokeWidth={3} />}</span>
+        </div>
+      </div>; })}
+    <p style={{ fontSize: 11.5, color: T.muted, textAlign: "center", marginTop: 10 }}>
+      Tap a meal to log it · thumbs teach the generator your taste.</p>
+  </div>;
+}
+
+/* ================= deterministic week assembly =================
+   Everything except the 2 batch recipes is a known building block.
+   The week is assembled on-device; no big LLM call needed. */
+const BLOCKS = {
+  shakeMilk: { slot: "Breakfast", name: "Whey shake", note: "3 scoops + 1½ cups whole milk", kcal: 533, protein: 75, carbs: 24, fat: 18, na: 308 },
+  shakeWater: { slot: "Snack", name: "Whey shake", note: "with water, at work", kcal: 309, protein: 63, carbs: 6, fat: 6, na: 150 },
+  bar: { slot: "Snack", name: "Protein bar", note: "Barebells or similar", kcal: 200, protein: 20, carbs: 20, fat: 7, na: 190 },
+  cottage: { slot: "Snack", name: "Cottage cheese", note: "½ cup", kcal: 90, protein: 12, carbs: 4, fat: 2, na: 350 },
+  cottageBerries: { slot: "Snack", name: "Cottage cheese + berries", note: "½ cup + 1 cup frozen berries", kcal: 160, protein: 13, carbs: 21, fat: 2, na: 350 },
+  berriesString: { slot: "Snack", name: "Berries + string cheese", note: "1 cup + 1 stick", kcal: 150, protein: 8, carbs: 18, fat: 6, na: 160 },
+  chocFruit: { slot: "Evening", name: "Chocolate-covered frozen fruit", note: "", kcal: 150, protein: 1, carbs: 20, fat: 7, na: 10 },
+  string2: { slot: "Evening", name: "String cheese ×2", note: "", kcal: 160, protein: 14, carbs: 2, fat: 12, na: 320 },
+  sunLunch: { slot: "Lunch", name: "Tuna, rice & veggie bowl", note: "Zero-cook • tuna + rice pouches + veg + olive oil", kcal: 1080, protein: 56, carbs: 150, fat: 28, na: 780 },
+  chipotle: { slot: "Lunch", name: "Chipotle bowl", note: "Modified • out", kcal: 880, protein: 85, carbs: 89, fat: 23, na: 1450, tags: ["out"] },
+  roti: { slot: "Lunch", name: "Roti bowl", note: "Modified • out", kcal: 1045, protein: 79, carbs: 73, fat: 47, na: 1600, tags: ["out"] },
+  cava: { slot: "Lunch", name: "Cava-style bowl", note: "out", kcal: 850, protein: 77, carbs: 53, fat: 40, na: 1300, tags: ["out"] },
+};
+const MID_WORK = ["shakeWater", "bar"];                                  // workday snack rules
+const MID_HOME = ["bar", "cottage", "berriesString", "shakeWater"];      // home days
+const EVENING = ["chocFruit", "cottageBerries", "cottage", "berriesString", "string2"];
+
+function mealFromBlock(key, over) { return Object.assign({}, BLOCKS[key], over || {}); }
+function dinnerFrom(c, note, tags) {
+  const ps = (c && c.perServing) || {};
+  return { slot: "Dinner", name: c.name, note: note, kcal: +ps.kcal || 900, protein: +ps.protein || 70,
+    carbs: +ps.carbs || 80, fat: +ps.fat || 28, na: +ps.na || 700, tags: tags };
+}
+function lunchFrom(c, note) { const d = dinnerFrom(c, note); d.slot = "Lunch"; delete d.tags; return d; }
+
+/* choose the midday + evening snack pair that best closes the day's protein/kcal gap */
+function pickSnacks(fixed, targets, midKeys, counts) {
+  const base = fixed.reduce((a, m) => ({ k: a.k + m.kcal, p: a.p + m.protein }), { k: 0, p: 0 });
+  let best = null;
+  midKeys.forEach(function (mk) { EVENING.forEach(function (ek) {
+    const k = base.k + BLOCKS[mk].kcal + BLOCKS[ek].kcal;
+    const p = base.p + BLOCKS[mk].protein + BLOCKS[ek].protein;
+    const floor = 0.9 * targets.protein;
+    const score = (p < floor ? (floor - p) * 25 : 0) + Math.abs(k - targets.kcal);
+    if (!best || score < best.score) best = { mk: mk, ek: ek, score: score };
+  }); });
+  counts[best.mk] = (counts[best.mk] || 0) + 1;
+  counts[best.ek] = (counts[best.ek] || 0) + 1;
+  return [mealFromBlock(best.mk, { slot: "Snack" }), mealFromBlock(best.ek, { slot: "Evening" })];
+}
+
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+function scheduleDinners(A, B) {
+  function d(name, lunch, dinner) { return { day: name, lunch: lunch, dinner: dinner }; }
+  return [
+    d("Sun", mealFromBlock("sunLunch"), dinnerFrom(A, "Recipe A \u2022 fresh cook \u2014 batch covers Sun\u2013Wed", ["cook"])),
+    d("Mon", mealFromBlock("chipotle"), dinnerFrom(A, "Recipe A \u2022 leftover")),
+    d("Tue", mealFromBlock("roti"), dinnerFrom(A, "Recipe A \u2022 leftover")),
+    d("Wed", mealFromBlock("cava"), dinnerFrom(A, "Recipe A \u2022 last \u2014 cook Recipe B tonight", ["cook"])),
+    d("Thu", mealFromBlock("chipotle"), dinnerFrom(B, "Recipe B \u2022 fresh")),
+    d("Fri", lunchFrom(B, "Recipe B \u2022 leftover \u2022 WFH"), dinnerFrom(B, "Recipe B \u2022 leftover")),
+    d("Sat", lunchFrom(B, "Recipe B \u2022 leftover"), dinnerFrom(B, "Recipe B \u2022 last")),
+  ];
+}
+function marshalSnacks(sched, targets) {
+  const counts = {};
+  const midMap = { Sun: MID_HOME, Mon: MID_WORK, Tue: MID_WORK, Wed: MID_WORK, Thu: MID_WORK, Fri: MID_HOME, Sat: MID_HOME };
+  const days = sched.map(function (s) {
+    const picks = pickSnacks([BLOCKS.shakeMilk, s.lunch, s.dinner], targets, midMap[s.day], counts);
+    return { day: s.day, meals: [mealFromBlock("shakeMilk"), s.lunch, picks[0], s.dinner, picks[1]] };
+  });
+  return { days: days, counts: counts };
+}
+
+function sodiumNotes(days) {
+  const notes = [];
+  days.forEach(function (d) {
+    const na = d.meals.reduce(function (n, m) { return n + (m.na || 0); }, 0);
+    if (na > 3000) notes.push(d.day + " ~" + na + "mg sodium — hard flag: skip or halve the saltiest sauce at dinner (−400–600mg).");
+    else if (na > 2300) notes.push(d.day + " ~" + na + "mg — above the 2,300mg guideline; go easy on added sauces.");
+  });
+  return notes.join(" ");
+}
+
+function meatPounds(concept, servings) {
+  var pPer = (concept && concept.perServing && +concept.perServing.protein) || 85;
+  var cookedG = (pPer * 0.85) / 0.29;   // grams cooked meat per serving (~29g protein/100g cooked)
+  var rawG = cookedG / 0.75;            // raw = cooked / yield
+  var lb = Math.ceil(((rawG * servings) / 453.6) * 2) / 2;  // round up to 0.5 lb
+  var trays = Math.max(1, Math.ceil(lb / 1.25));            // TJ's trays ~1\u20131.5 lb
+  var lbStr = (lb % 1 === 0) ? String(lb) : lb.toFixed(1);
+  return "~" + lbStr + " lb raw (" + trays + " tray" + (trays > 1 ? "s" : "") + ")";
+}
+function buildGrocery(A, B, counts) {
+  var milkCups = 7 * 1.5;  // one morning milk shake per day
+  var scoops = 21 + 2 * (counts.shakeWater || 0);
+  var sticks = (counts.berriesString || 0) + 2 * (counts.string2 || 0);
+  var berryCups = (counts.berriesString || 0) + (counts.cottageBerries || 0);
+  var cot = (counts.cottage || 0) + (counts.cottageBerries || 0);
+  return [
+    { section: "Meat & Seafood", items: [
+      { name: A.name + " \u2014 protein", qty: meatPounds(A, 4) },
+      (B !== A ? { name: B.name + " \u2014 protein", qty: meatPounds(B, 5) } : null),
+    ].filter(Boolean) },
+    { section: "Dairy & Refrigerated", items: [
+      { name: "Whole milk (morning shakes only)", qty: "1 gallon \u2014 7 \u00d7 1\u00bd cups \u2248 " + Math.round(milkCups) + " cups" },
+      { name: "Cottage cheese, low-sodium", qty: cot + " \u00d7 \u00bd-cup" },
+      { name: "String cheese", qty: sticks + " sticks" },
+    ] },
+    { section: "Frozen", items: [
+      { name: "Veg for " + A.name, qty: "~2 bags" },
+      (B !== A ? { name: "Veg for " + B.name, qty: "~2 bags" } : null),
+      { name: "Mixed berries", qty: berryCups + " cups" },
+      (counts.chocFruit ? { name: "Chocolate-covered frozen fruit", qty: "1 bag" } : null),
+    ].filter(Boolean) },
+    { section: "Grains", items: [
+      { name: "Jasmine rice pouches, 90-sec", qty: "~8" },
+    ] },
+    { section: "Pantry & Sauces", items: [
+      { name: "Tuna packets (Sunday lunch)", qty: "2" },
+      { name: "Sauce / aromatics for " + A.name, qty: "check pantry" },
+      (B !== A ? { name: "Sauce / aromatics for " + B.name, qty: "check pantry" } : null),
+      { name: "Olive oil", qty: "check pantry" },
+    ].filter(Boolean) },
+    { section: "Supplements & Snacks", items: [
+      { name: "Whey protein", qty: "\u2248" + scoops + " scoops this week \u2014 restock if low" },
+      { name: "Protein bars (Barebells or similar)", qty: String(counts.bar || 0) },
+    ] },
+  ];
+}
+
+/* ================= Generate (Plan tab) ================= */
+function Generate({ taste, thumb, weeks, onPlanReady }) {
+  const [phase, setPhase] = useState("input"); // input | proposing | proposal | building | error
+  const [checkin, setCheckin] = useState("");
+  const [proposal, setProposal] = useState(null);
+  const [conceptVotes, setConceptVotes] = useState({});
+  const [stage, setStage] = useState("");
+  const [err, setErr] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [keyOpen, setKeyOpen] = useState(false);
+  const [keySaved, setKeySaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const lastWeeks = weeks.slice(0, 2).map((w) => w.label).join(", ");
+
+  useEffect(() => { (async () => { const k = await store.get(KEY_STORE); if (k) { setApiKey(k); setKeySaved(true); } })(); }, []);
+  const saveKey = async () => { const k = apiKey.trim(); await store.set(KEY_STORE, k); setKeySaved(!!k); };
+  const clearKey = async () => { await store.set(KEY_STORE, ""); setApiKey(""); setKeySaved(false); };
+
+  async function propose(revision) {
+    setPhase("proposing"); setErr(""); setStage("Planning feasts\u2026");
+    try {
+      let fb = "";
+      if (revision && proposal) {
+        fb = "\nPREVIOUS PROPOSAL AND THE USER'S VOTES (revise accordingly; keep 👍 concepts, replace 👎 ones):\n" +
+          proposal.concepts.map((c, i) => `- ${c.name}: ${conceptVotes[i] === 1 ? "THUMBS UP" : conceptVotes[i] === -1 ? "THUMBS DOWN" : "no vote"}`).join("\n");
+      }
+      const out = await askClaude(RULES,
+        `Propose the home-cooked side of next week's plan (week starting ${nextSunday()}). Recent weeks (vary from them): ${lastWeeks || "unknown — vary from a chicken stir-fry + masala turkey week"}.
+${tasteSummary(taste)}
+USER CHECK-IN (apply the Adjustment Protocol if triggered): ${checkin || "no check-in given — use default targets and note the assumption"}.${fb}
+Return ONLY JSON: {"targets":{"kcal":N,"protein":N,"carbs":N,"fat":N},"targetNote":"one line on any adjustment or 'unchanged'","concepts":[{"name":"...","desc":"protein, carb, veg, sauce style — one line","prep":"active prep + pan count, e.g. '~20 min · 1 pan'","servings":N,"covers":"which meals/nights","perServing":{"kcal":N,"protein":N,"carbs":N,"fat":N,"na":N}}],"fridayAndWeekend":"one line — batch leftovers / zero-cook assembly only","snacks":"one line","cookDays":"one line"}
+Exactly 2 batch recipe concepts (the hard cap), plus optionally 1 alternate marked in its name with '(alt)'. Each concept MUST be ≤30 min active prep and ≤2 pans — state it honestly in "prep".`);
+      const p = extractJSON(out);
+      if (!p.concepts || !p.concepts.length) throw new Error("No concepts returned.");
+      setProposal(p); setConceptVotes({}); setPhase("proposal");
+    } catch (e) { setErr(e.message); setPhase(proposal ? "proposal" : "input"); }
+  }
+
+  function chooseTwo() {
+    const cs = proposal.concepts;
+    const idxs = cs.map(function (_, i) { return i; });
+    const notDown = idxs.filter(function (i) { return conceptVotes[i] !== -1; });
+    const up = notDown.filter(function (i) { return conceptVotes[i] === 1; });
+    const nonAlt = function (i) { return !/\(alt\)/i.test(cs[i].name || ""); };
+    const chosen = [];
+    const add = function (i) { if (chosen.length < 2 && chosen.indexOf(i) === -1) chosen.push(i); };
+    up.forEach(add);                       // thumbs-up always included (first two win)
+    notDown.filter(nonAlt).forEach(add);   // then non-alt survivors
+    notDown.forEach(add);                  // then anything left
+    return chosen.map(function (i) { return cs[i]; });
+  }
+
+  async function build() {
+    setPhase("building"); setErr("");
+    try {
+      const chosen = chooseTwo();
+      const A = chosen[0], B = chosen[1] || chosen[0];
+      setStage("Scheduling feasts\u2026"); await sleep(850);
+      const sched = scheduleDinners(A, B);
+      setStage("Marshaling snacks\u2026"); await sleep(850);
+      const asm = marshalSnacks(sched, proposal.targets);
+      const raw = {
+        weekStart: nextSunday(),
+        targets: proposal.targets,
+        days: asm.days,
+        grocery: buildGrocery(A, B, asm.counts),
+        notes: [
+          proposal.targetNote && proposal.targetNote !== "unchanged" ? proposal.targetNote : "",
+          sodiumNotes(asm.days),
+          B === A ? "Only one recipe approved \u2014 it covers the whole week, so expect repetition." : "",
+        ].filter(Boolean).join(" "),
+      };
+      normalizePlan(raw); // validate before saving
+      onPlanReady(raw);
+      setStage(""); setPhase("input"); setProposal(null); setCheckin("");
+    } catch (e) { setStage(""); setErr("Build failed: " + e.message + " \u2014 tap build again."); setPhase("proposal"); }
+  }
+
+  function fullBuildPrompt() {
+    const chosen = proposal.concepts.filter((c, i) => conceptVotes[i] !== -1);
+    const ws = nextSunday();
+    return `${RULES}
+
+=== TASK ===
+Build the FULL 7-day plan (week starting ${ws}) from these APPROVED batch recipes: ${JSON.stringify(chosen)}.
+Targets: ${JSON.stringify(proposal.targets)} (${proposal.targetNote}). ${tasteSummary(taste)}
+Every day must satisfy the tolerance bands; estimate sodium ("na") per meal; Mon–Thu lunch = a cached restaurant bowl (Chipotle/Roti/Cava), Fri WFH, breakfast = whey shake; batch dinners repeat as leftovers; grocery list in store-walk sections, yield-adjusted and package-rounded.
+Return ONLY JSON, no prose, no markdown fences, no trailing commas: {"weekStart":"${ws}","targets":{"kcal":N,"protein":N,"carbs":N,"fat":N},"days":[{"day":"Sun","meals":[{"slot":"...","name":"...","note":"...","kcal":N,"protein":N,"carbs":N,"fat":N,"na":N,"tags":["out"|"cook"]}]} — one object per day, Sun through Sat, 7 total],"grocery":[{"section":"...","items":[{"name":"...","qty":"..."}]}],"notes":"sodium flags with concrete fixes, band misses, target changes"}`;
+  }
+  async function copyPrompt() {
+    const text = fullBuildPrompt();
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); }
+      else {
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        document.execCommand("copy"); document.body.removeChild(ta);
+      }
+      setCopied(true); setTimeout(() => setCopied(false), 2500);
+    } catch (e) { setErr("Couldn't copy automatically — long-press to select the prompt manually."); }
+  }
+
+  const box = { background: "#fff", borderRadius: 14, border: "1px solid #E3E0D6", padding: 16, marginBottom: 14 };
+  return <div style={{ padding: "8px 16px 16px" }}>
+    <Header title="Plan next week" sub={"Week starting " + nextSunday()} />
+    {phase === "input" && <>
+      <div style={box}>
+        <div onClick={() => setKeyOpen((o) => !o)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+          <div style={{ fontSize: 13.5, fontWeight: 800 }}>AI generator <span style={{ color: keySaved ? T.green : T.muted }}>· {keySaved ? "connected ✓" : "off"}</span></div>
+          <ChevronDown size={16} style={{ transform: keyOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+        </div>
+        {keyOpen && <div style={{ marginTop: 10 }}>
+          <div style={{ fontSize: 12.5, color: T.muted, marginBottom: 8, lineHeight: 1.45 }}>
+            Optional. Paste an Anthropic API key to generate plans right here — it's stored only on this device and sent straight to Anthropic. Without it, generate in a Claude chat and load the JSON via Weeks → Import.</div>
+          <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="sk-ant-…"
+            style={{ width: "100%", boxSizing: "border-box", borderRadius: 10, border: "1px solid #D5D2C7", padding: 11, fontSize: 13, fontFamily: "ui-monospace, Menlo, monospace" }} />
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button onClick={saveKey} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "none", cursor: "pointer", background: T.ink, color: "#fff", fontWeight: 800, fontSize: 13 }}>Save key</button>
+            {keySaved && <button onClick={clearKey} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid #D5D2C7", cursor: "pointer", background: "#fff", color: T.ink, fontWeight: 800, fontSize: 13 }}>Remove</button>}
+          </div>
+        </div>}
+      </div>
+      <div style={box}>
+        <div style={{ fontSize: 13.5, fontWeight: 800, marginBottom: 6 }}>Check-in</div>
+        <div style={{ fontSize: 12.5, color: T.muted, marginBottom: 8 }}>How's the scale trending, and how did last week actually go? (Drives the calorie adjustment protocol — leave blank to keep current targets.)</div>
+        <textarea value={checkin} onChange={(e) => setCheckin(e.target.value)} placeholder="e.g. Down 1.3 lb this week, lifts steady. Skipped two evening snacks."
+          style={{ width: "100%", minHeight: 70, boxSizing: "border-box", borderRadius: 10, border: "1px solid #D5D2C7", padding: 10, fontSize: 14, fontFamily: UI, resize: "vertical" }} />
+      </div>
+      <TasteCard taste={taste} thumb={thumb} />
+      <button onClick={() => propose(false)} style={{ width: "100%", padding: "15px 0", borderRadius: 12, border: "none",
+        cursor: "pointer", background: T.ink, color: "#fff", fontSize: 15.5, fontWeight: 800, display: "flex",
+        alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <Sparkles size={18} /> Suggest this week's meals</button>
+      {err && <div style={{ color: T.red, fontSize: 12.5, fontWeight: 600, marginTop: 10 }}>{err}</div>}
+    </>}
+    {(phase === "proposing" || phase === "building") && <div style={{ textAlign: "center", padding: "50px 20px" }}>
+      <RefreshCw size={26} color={T.muted} style={{ animation: "spin 1.2s linear infinite" }} />
+      <style>{"@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}"}</style>
+      <div style={{ fontSize: 14, fontWeight: 700, color: T.muted, marginTop: 12 }}>
+        {stage || (phase === "proposing" ? "Planning feasts…" : "Working…")}</div>
+    </div>}
+    {phase === "proposal" && proposal && <>
+      <div style={{ ...box, borderColor: T.ink, borderWidth: 2 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 4 }}>Targets</div>
+        <div style={{ fontSize: 13.5, fontVariantNumeric: "tabular-nums" }}>
+          {proposal.targets.kcal} kcal · {proposal.targets.protein}p · {proposal.targets.carbs}c · {proposal.targets.fat}f</div>
+        <div style={{ fontSize: 12, color: T.muted, marginTop: 3 }}>{proposal.targetNote}</div>
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 800, margin: "2px 0 8px" }}>Batch recipes — vote before building</div>
+      {proposal.concepts.map((c, i) => <div key={i} style={{ ...box, marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 800 }}>{c.name}</div>
+            <div style={{ fontSize: 12.5, color: T.muted, marginTop: 3 }}>{c.desc}</div>
+            {c.prep && <div style={{ display: "inline-block", fontSize: 11, fontWeight: 800, color: T.green,
+              background: T.greenBg, borderRadius: 6, padding: "2px 7px", marginTop: 6 }}>{c.prep}</div>}
+            <div style={{ fontSize: 11.5, color: T.muted, marginTop: 5, fontVariantNumeric: "tabular-nums" }}>
+              {c.servings} servings · {c.covers}<br />
+              ~{c.perServing?.kcal} kcal · {c.perServing?.protein}p · {c.perServing?.carbs}c · {c.perServing?.fat}f / serving</div>
+          </div>
+          <ThumbPair state={conceptVotes[i] ?? 0}
+            onUp={() => setConceptVotes((v) => ({ ...v, [i]: v[i] === 1 ? 0 : 1 }))}
+            onDown={() => setConceptVotes((v) => ({ ...v, [i]: v[i] === -1 ? 0 : -1 }))} />
+        </div>
+      </div>)}
+      <div style={box}>
+        <div style={{ fontSize: 12.5 }}><b>Fri + weekend:</b> <span style={{ color: T.muted }}>{proposal.fridayAndWeekend}</span></div>
+        <div style={{ fontSize: 12.5, marginTop: 5 }}><b>Snacks:</b> <span style={{ color: T.muted }}>{proposal.snacks}</span></div>
+        <div style={{ fontSize: 12.5, marginTop: 5 }}><b>Cook days:</b> <span style={{ color: T.muted }}>{proposal.cookDays}</span></div>
+      </div>
+      {err && <div style={{ color: T.red, fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>{err}</div>}
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={() => propose(true)} style={{ flex: 1, padding: "14px 0", borderRadius: 12, border: `1.5px solid ${T.ink}`,
+          cursor: "pointer", background: "#fff", color: T.ink, fontSize: 14, fontWeight: 800 }}>Revise with my votes</button>
+        <button onClick={build} disabled={proposal.concepts.every((c, i) => conceptVotes[i] === -1)}
+          style={{ flex: 1.4, padding: "14px 0", borderRadius: 12, border: "none", cursor: "pointer",
+          background: T.green, color: "#fff", fontSize: 14, fontWeight: 800 }}>Looks good — build the week</button>
+      </div>
+      <p style={{ fontSize: 11.5, color: T.muted, textAlign: "center", marginTop: 10 }}>
+        Your votes here are saved to your taste history too.</p>
+      <div style={{ ...box, marginTop: 6, background: "#FBF6E9", borderColor: "#E7D9B0" }}>
+        <div style={{ fontSize: 12.5, fontWeight: 800, marginBottom: 4 }}>Build won't finish? Use the reliable way</div>
+        <div style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, marginBottom: 10 }}>
+          The full-week build can time out on phone data. This never does: copy the prompt, paste it into any Claude chat, copy the JSON it returns, then load it in Weeks → Import.</div>
+        <button onClick={copyPrompt} disabled={proposal.concepts.every((c, i) => conceptVotes[i] === -1)}
+          style={{ width: "100%", padding: "13px 0", borderRadius: 11, border: `1.5px solid ${T.ink}`, cursor: "pointer",
+          background: copied ? T.green : "#fff", color: copied ? "#fff" : T.ink, fontSize: 14, fontWeight: 800 }}>
+          {copied ? "Copied ✓ — now paste it into a Claude chat" : "Copy prompt for a Claude chat"}</button>
+      </div>
+    </>}
+  </div>;
+}
+function TasteCard({ taste, thumb }) {
+  const entries = Object.entries(taste || {});
+  return <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E3E0D6", padding: 16, marginBottom: 14 }}>
+    <div style={{ fontSize: 13.5, fontWeight: 800, marginBottom: 6 }}>Your taste history</div>
+    {entries.length === 0 && <div style={{ fontSize: 12.5, color: T.muted }}>Nothing yet — thumb meals on the Meals tab and future plans will learn from it.</div>}
+    {entries.map(([k, t]) => <div key={k} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid #F1EFE7" }}>
+      {t.v > 0 ? <ThumbsUp size={14} color={T.green} /> : <ThumbsDown size={14} color={T.red} />}
+      <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600 }}>{t.name}</span>
+      <button onClick={() => thumb(t.name, 0)} style={{ background: "none", border: "none", cursor: "pointer", color: T.faint }}><X size={15} /></button>
+    </div>)}
+  </div>;
+}
+
+/* ================= History ================= */
+function WeekCard({ w, live }) {
+  const [open, setOpen] = useState(live);
+  const perDay = w.plan.days.map((d) => {
+    const s = d.meals.reduce((a, m) => { if (w.eaten[m.id]) { a.n += 1; a.kcal += m.kcal; } return a; }, { n: 0, kcal: 0 });
+    return { day: d.day, total: d.meals.length, ...s };
+  });
+  return <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E3E0D6", overflow: "hidden", marginBottom: 12 }}>
+    <button onClick={() => setOpen((o) => !o)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 16,
+      padding: 16, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+      <div style={{ position: "relative", width: 76, height: 76, flexShrink: 0 }}>
+        <Ring pct={w.pct} />
+        <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 18, fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>{w.pct}%</span></div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 15.5, fontWeight: 800 }}>{w.label}</div>
+        <div style={{ fontSize: 13, color: T.muted, marginTop: 2 }}>{w.ate} of {w.total} planned meals eaten</div>
+        {live && <div style={{ fontSize: 12, fontWeight: 700, color: T.green, marginTop: 4 }}>Current week · live</div>}
+      </div>
+      <ChevronDown size={20} color={T.muted} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+    </button>
+    {open && <div style={{ borderTop: "1px solid #ECEAE1", padding: "6px 16px 14px" }}>
+      {perDay.map((p, i) => <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid #F1EFE7" }}>
+        <span style={{ width: 34, fontSize: 13, fontWeight: 800 }}>{p.day}</span>
+        <div style={{ flex: 1 }}><Bar value={p.n} target={p.total} color={p.n === p.total ? T.green : T.amber} /></div>
+        <span style={{ fontSize: 12, fontWeight: 700, color: T.muted, width: 34, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{p.n}/{p.total}</span>
+        <span style={{ fontSize: 11.5, color: T.faint, width: 62, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{p.kcal ? `${p.kcal}kcal` : "—"}</span>
+      </div>)}
+      {w.plan.notes && <div style={{ fontSize: 12, color: T.muted, marginTop: 10, lineHeight: 1.5 }}><b>Plan notes:</b> {w.plan.notes}</div>}
+    </div>}
+  </div>;
+}
+function History({ hist, activeKey, getBackup, onRestore }) {
+  const [mode, setMode] = useState(null); // null | "backup" | "restore"
+  const [bk, setBk] = useState("");
+  const [rs, setRs] = useState("");
+  const [msg, setMsg] = useState("");
+  const openBackup = async () => {
+    setMode("backup"); setMsg(""); setBk("Preparing backup…");
+    try { setBk(await getBackup()); } catch (e) { setBk(""); setMsg("Couldn't build the backup — try again."); }
+  };
+  const doRestore = () => { const e = onRestore(rs); setMsg(e || "Restored ✓"); if (!e) { setRs(""); setMode(null); } };
+  const btn = (on) => ({ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "12px 0",
+    borderRadius: 10, cursor: "pointer", background: on ? T.ink : "#fff", color: on ? "#fff" : T.ink,
+    border: on ? "none" : "1px solid #D5D2C7", fontSize: 14, fontWeight: 800, fontFamily: UI });
+  const ta = { width: "100%", minHeight: 80, boxSizing: "border-box", borderRadius: 10, border: "1px solid #D5D2C7",
+    padding: 10, fontSize: 11, fontFamily: "ui-monospace, Menlo, monospace", background: "#fff", resize: "vertical" };
+  return <div style={{ padding: "8px 16px 16px" }}>
+    <Header title="History" sub="Adherence over time" />
+    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E3E0D6", padding: 14, marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={openBackup} style={btn(mode === "backup")}><Download size={16} /> Back up</button>
+        <button onClick={() => { setMode(mode === "restore" ? null : "restore"); setMsg(""); }} style={btn(mode === "restore")}><Upload size={16} /> Restore</button>
+      </div>
+      <div style={{ fontSize: 11.5, color: T.muted, marginTop: 8, lineHeight: 1.45 }}>
+        Your data is saved on this device. Copy a backup before clearing your browser data or switching devices — paste it back here to restore your weeks, check-offs, and taste history. (Your API key is never included in a backup.)</div>
+      {mode === "backup" && <div style={{ marginTop: 10 }}>
+        <textarea readOnly value={bk} onFocus={(e) => e.target.select()} style={ta} />
+        <div style={{ fontSize: 11.5, color: T.muted, marginTop: 4 }}>Tap the box to select all, then copy it somewhere safe.</div>
+      </div>}
+      {mode === "restore" && <div style={{ marginTop: 10 }}>
+        <textarea value={rs} onChange={(e) => setRs(e.target.value)} placeholder="Paste a backup here…" style={ta} />
+        <button onClick={doRestore} disabled={!rs.trim()} style={{ width: "100%", marginTop: 8, padding: "12px 0", borderRadius: 10,
+          border: "none", cursor: rs.trim() ? "pointer" : "default", background: rs.trim() ? T.ink : "#CFD3C9", color: "#fff",
+          fontSize: 14, fontWeight: 800 }}>Restore backup</button>
+      </div>}
+      {msg && <div style={{ fontSize: 12.5, fontWeight: 700, color: msg.indexOf("✓") !== -1 ? T.green : T.red, marginTop: 8 }}>{msg}</div>}
+    </div>
+    {hist.length === 0 && <div style={{ fontSize: 13, color: T.muted, textAlign: "center", marginTop: 30 }}>No weeks yet.</div>}
+    {hist.map((w) => <WeekCard key={w.key} w={w} live={w.key === activeKey} />)}
+  </div>;
+}
+
+/* ================= week sheet (switch / import) ================= */
+function Sheet({ weeks, activeKey, onSwitch, onImport, onClose }) {
+  const [text, setText] = useState("");
+  const [err, setErr] = useState("");
+  return <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,20,20,.4)", zIndex: 50,
+    display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+    <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 448, background: T.bg,
+      borderRadius: "20px 20px 0 0", padding: "8px 18px 24px", maxHeight: "88dvh", overflowY: "auto" }}>
+      <div style={{ display: "flex", justifyContent: "center", padding: "6px 0 12px" }}>
+        <div style={{ width: 38, height: 5, borderRadius: 3, background: "#D5D2C7" }} /></div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 20, fontWeight: 900 }}>Weeks</span>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: T.muted }}><X size={22} /></button></div>
+      {weeks.map((w) => {
+        const on = w.key === activeKey;
+        return <button key={w.key} onClick={() => onSwitch(w.key)} style={{ width: "100%", display: "flex", alignItems: "center",
+          justifyContent: "space-between", padding: "13px 14px", marginBottom: 8, borderRadius: 11, cursor: "pointer",
+          background: on ? T.ink : "#fff", color: on ? "#fff" : T.ink, border: on ? "none" : "1px solid #E3E0D6",
+          fontSize: 15, fontWeight: 700, textAlign: "left" }}>{w.label}{on && <Check size={18} color="#fff" strokeWidth={3} />}</button>; })}
+      <div style={{ borderTop: "1px solid #DCD9CF", margin: "16px 0 12px" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <Plus size={18} /><span style={{ fontSize: 16, fontWeight: 800 }}>Import a week (JSON)</span></div>
+      <textarea value={text} onChange={(e) => { setText(e.target.value); setErr(""); }} placeholder="Paste a week's JSON generated in a Claude chat…"
+        style={{ width: "100%", minHeight: 90, boxSizing: "border-box", borderRadius: 10, border: `1px solid ${err ? T.red : "#D5D2C7"}`,
+          padding: 12, fontSize: 13, fontFamily: "ui-monospace, Menlo, monospace", resize: "vertical", background: "#fff" }} />
+      {err && <div style={{ color: T.red, fontSize: 12.5, fontWeight: 600, marginTop: 6 }}>{err}</div>}
+      <button onClick={() => { const e = onImport(text); if (e) setErr(e); else setText(""); }} disabled={!text.trim()}
+        style={{ width: "100%", marginTop: 10, padding: "13px 0", borderRadius: 11, border: "none",
+          cursor: text.trim() ? "pointer" : "default", background: text.trim() ? T.green : "#CFD3C9", color: "#fff",
+          fontSize: 14.5, fontWeight: 800 }}>Load plan</button>
+      <div style={{ fontSize: 11.5, color: T.muted, marginTop: 12, textAlign: "center" }}>Back up &amp; restore live at the top of the History tab.</div>
+    </div>
+  </div>;
+}
+
+/* ================= app shell ================= */
+function App() {
+  const [tab, setTab] = useState("eat");
+  const [sel, setSel] = useState(0);
+  const [weeks, setWeeks] = useState([]);
+  const [activeKey, setActiveKey] = useState(null);
+  const [plan, setPlan] = useState(null);
+  const [eaten, setEaten] = useState({});
+  const [checked, setChecked] = useState({});
+  const [taste, setTaste] = useState({});
+  const [hist, setHist] = useState([]);
+  const [sheet, setSheet] = useState(false);
+
+  async function getBackup() {
+    const dump = { idx: weeks, active: activeKey, taste };
+    for (const w of weeks) {
+      dump["plan-" + w.key] = await store.get("plan-" + w.key);
+      dump["meals-" + w.key] = await store.get("meals-" + w.key);
+      dump["grocery-" + w.key] = await store.get("grocery-" + w.key);
+    }
+    return JSON.stringify(dump);
+  }
+
+  async function activate(key, idx) {
+    const raw = await store.get("plan-" + key);
+    const p = normalizePlan(raw);
+    setPlan(p); setActiveKey(key);
+    setEaten((await store.get("meals-" + key)) || {});
+    setChecked((await store.get("grocery-" + key)) || {});
+    setSel(todayIndex(key, p.days.length));
+    if (idx) setWeeks(idx);
+    store.set(ACTIVE, key);
+  }
+
+  useEffect(() => {
+    (async () => {
+      let idx = await store.get(IDX);
+      if (!idx || !idx.length) {
+        const p = normalizePlan(SEED);
+        await store.set("plan-" + p.weekKey, SEED);
+        idx = [{ key: p.weekKey, label: p.weekLabel }];
+        await store.set(IDX, idx); await store.set(ACTIVE, p.weekKey);
+      }
+      setTaste((await store.get(TASTE)) || {});
+      await activate((await store.get(ACTIVE)) || idx[0].key, idx);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (!weeks.length) { setHist([]); return; }
+      const list = [];
+      for (const w of weeks) {
+        let p, e;
+        if (w.key === activeKey && plan) { p = plan; e = eaten; }
+        else { const raw = await store.get("plan-" + w.key); if (!raw) continue; p = normalizePlan(raw); e = (await store.get("meals-" + w.key)) || {}; }
+        const total = p.days.reduce((n, d) => n + d.meals.length, 0);
+        const ate = p.days.reduce((n, d) => n + d.meals.filter((m) => e[m.id]).length, 0);
+        list.push({ key: w.key, label: p.weekLabel, plan: p, eaten: e, total, ate, pct: total ? Math.round((ate / total) * 100) : 0 });
+      }
+      setHist(list);
+    })();
+  }, [weeks, activeKey, plan, eaten]);
+
+  const toggleCheck = (id) => setChecked((p) => { const n = { ...p, [id]: !p[id] }; store.set("grocery-" + activeKey, n); return n; });
+  const toggleEat = (id) => setEaten((p) => { const n = { ...p, [id]: !p[id] }; store.set("meals-" + activeKey, n); return n; });
+  const thumb = (name, v) => setTaste((p) => {
+    const k = normName(name); const n = { ...p };
+    const cur = n[k]?.v ?? 0;
+    if (v === 0 || cur === v) delete n[k]; else n[k] = { name, v, ts: Date.now() };
+    store.set(TASTE, n); return n;
+  });
+
+  function loadRaw(raw) {
+    const p = normalizePlan(raw);
+    store.set("plan-" + p.weekKey, raw);
+    const idx = [{ key: p.weekKey, label: p.weekLabel }, ...weeks.filter((w) => w.key !== p.weekKey)].sort((a, b) => (a.key < b.key ? 1 : -1));
+    store.set(IDX, idx);
+    activate(p.weekKey, idx);
+  }
+  function handleImport(txt) {
+    try { loadRaw(JSON.parse(txt)); setSheet(false); return null; }
+    catch (e) { return e instanceof SyntaxError ? "That isn't valid JSON — check for a missing comma or bracket." : e.message; }
+  }
+  function handleRestore(txt) {
+    try {
+      const dump = JSON.parse(txt);
+      if (!dump.idx) throw new Error("That doesn't look like a backup.");
+      Object.entries(dump).forEach(([k, v]) => { if (k !== "idx" && k !== "active" && k !== "taste") store.set(k, v); });
+      store.set(IDX, dump.idx); store.set(TASTE, dump.taste || {}); setTaste(dump.taste || {});
+      activate(dump.active || dump.idx[0].key, dump.idx);
+      setSheet(false); return null;
+    } catch (e) { return e.message; }
+  }
+  function handleGenerated(raw) { loadRaw(raw); setTab("eat"); }
+
+  if (!plan) return <div className="app-shell" style={{ fontFamily: UI, background: T.bg }} />;
+
+  const tabs = [
+    { id: "plan", label: "Plan", Icon: Sparkles },
+    { id: "shop", label: "Shop", Icon: ShoppingCart },
+    { id: "eat", label: "Meals", Icon: Utensils },
+    { id: "history", label: "History", Icon: BarChart3 },
+  ];
+  return <div className="app-shell" style={{ fontFamily: UI, background: T.bg, color: T.ink, maxWidth: 448, margin: "0 auto",
+    display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+      {tab === "shop" && <Shop plan={plan} checked={checked} toggle={toggleCheck} onWeek={() => setSheet(true)} />}
+      {tab === "eat" && <Eat plan={plan} sel={sel} setSel={setSel} eaten={eaten} toggle={toggleEat} taste={taste} thumb={thumb} onWeek={() => setSheet(true)} />}
+      {tab === "plan" && <Generate taste={taste} thumb={thumb} weeks={weeks} onPlanReady={handleGenerated} />}
+      {tab === "history" && <History hist={hist} activeKey={activeKey} getBackup={getBackup} onRestore={handleRestore} />}
+    </div>
+    {sheet && <Sheet weeks={weeks} activeKey={activeKey} onSwitch={(k) => { activate(k); setSheet(false); }}
+      onImport={handleImport} onClose={() => setSheet(false)} />}
+    <nav style={{ flexShrink: 0, background: "#fff", borderTop: "1px solid #E3E0D6", display: "flex",
+      paddingBottom: "max(env(safe-area-inset-bottom, 0px), 14px)", paddingTop: 8 }}>
+      {tabs.map(({ id, label, Icon }) => {
+        const on = tab === id;
+        return <button key={id} onClick={() => setTab(id)} style={{ flex: 1, display: "flex", flexDirection: "column",
+          alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
+          <Icon size={23} color={on ? T.ink : T.faint} strokeWidth={on ? 2.4 : 2} />
+          <span style={{ fontSize: 11, fontWeight: on ? 800 : 600, color: on ? T.ink : T.faint }}>{label}</span>
+        </button>; })}
+    </nav>
+  </div>;
+}
+
+try {
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  window.__mounted = true;
+} catch (e) {
+  if (window.__err) window.__err((e && e.stack) || (e && e.message) || String(e));
+}
+</script>
+</body>
+</html>
